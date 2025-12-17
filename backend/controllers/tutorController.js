@@ -7,15 +7,45 @@ import User from '../models/User.js';
  * Get AI explanation for a topic
  * POST /api/ai-explain-topic
  */
+import ChatHistory from '../models/ChatHistory.js';
+
 export const explainTopic = async (req, res) => {
   try {
-    const { topic, analogy = 'reallife' } = req.body;
+    const { topic, analogy = 'reallife', userId } = req.body;
 
     if (!topic) {
       return res.status(400).json({ error: 'Topic is required' });
     }
 
+    // Get user (or demo)
+    let user;
+    if (userId) {
+      user = await User.findById(userId);
+    } else {
+      user = await User.findOne({ email: 'demo@learnflow.com' });
+      // Create demo user if not exists (for consistency)
+      if (!user) {
+        user = await User.create({ email: 'demo@learnflow.com', name: 'Demo User' });
+      }
+    }
+
+    // Get or create chat history
+    let chat = await ChatHistory.findOne({ userId: user._id });
+    if (!chat) {
+      chat = await ChatHistory.create({ userId: user._id, messages: [] });
+    }
+
+    const userMessage = `Explain ${topic} using ${analogy} analogy`;
+    chat.messages.push({ role: 'user', content: userMessage });
+
     const explanation = await explainTopicWithAnalogy(topic, analogy);
+
+    // AI Response Content construction
+    const aiContent = `${explanation.simpleExplanation}\n\n${explanation.analogyExplanation}`;
+    chat.messages.push({ role: 'model', content: aiContent });
+    
+    chat.lastUpdated = Date.now();
+    await chat.save();
 
     res.json({
       success: true,
@@ -30,6 +60,7 @@ export const explainTopic = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 /**
  * Generate quiz for a topic
@@ -140,4 +171,34 @@ export const getQuizHistory = async (req, res) => {
   }
 };
 
-export default { explainTopic, createQuiz, submitQuiz, getQuizHistory };
+/**
+ * Get chat history
+ * GET /api/chat-history
+ */
+export const getChatHistory = async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    let user;
+    if (userId) {
+      user = await User.findById(userId);
+    } else {
+      user = await User.findOne({ email: 'demo@learnflow.com' });
+    }
+
+    if (!user) {
+      return res.status(400).json({ error: 'User not found' });
+    }
+
+    const chat = await ChatHistory.findOne({ userId: user._id });
+
+    res.json({
+      success: true,
+      data: chat ? chat.messages : []
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export default { explainTopic, createQuiz, submitQuiz, getQuizHistory, getChatHistory };

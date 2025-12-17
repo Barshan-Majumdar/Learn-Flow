@@ -78,6 +78,12 @@ const generateBasicPlan = (subjects, examDate, hoursPerDay) => {
   const exam = new Date(examDate);
   const daysUntilExam = Math.ceil((exam - today) / (1000 * 60 * 60 * 24));
 
+  let bufferDays = 2;
+  if (daysUntilExam <= 2) bufferDays = 0;
+  else if (daysUntilExam <= 5) bufferDays = 1;
+  
+  const studyDays = Math.max(daysUntilExam - bufferDays, 1);
+
   let allTopics = [];
   subjects.forEach((subject) => {
     subject.topics.forEach((topic) => {
@@ -87,13 +93,13 @@ const generateBasicPlan = (subjects, examDate, hoursPerDay) => {
   });
 
   const topicsPerDay = Math.ceil(
-    allTopics.length / Math.max(daysUntilExam - 2, 1)
+    allTopics.length / studyDays
   );
   let topicIndex = 0;
 
   for (
     let day = 0;
-    day < daysUntilExam - 2 && topicIndex < allTopics.length;
+    day < studyDays && topicIndex < allTopics.length;
     day++
   ) {
     const date = new Date(today);
