@@ -7,6 +7,37 @@ import { getModel } from './model.js';
  * @param {number} hoursPerDay - Available study hours per day
  * @returns {Promise<Object>} - AI-optimized study plan
  */
+
+/**
+ * Helper to generate content with retry logic for 503 errors
+ */
+const generateContentWithRetry = async (model, prompt, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const result = await model.generateContent(prompt);
+      return result;
+    } catch (error) {
+      const isOverloaded = error.message.includes('503') || error.message.includes('overloaded');
+
+      if (isOverloaded && i < retries - 1) {
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = Math.pow(2, i) * 1000;
+        console.log(`Gemini overloaded. Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+};
+
+/**
+ * Generate study plan using AI
+ * @param {Array} subjects - Array of subjects with topics
+ * @param {Date} examDate - Target exam date
+ * @param {number} hoursPerDay - Available study hours per day
+ * @returns {Promise<Object>} - AI-optimized study plan
+ */
 export const generateStudyPlanWithAI = async (
   subjects,
   examDate,
@@ -51,7 +82,7 @@ Rules:
 5. Response must be valid JSON only`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await generateContentWithRetry(model, prompt);
     const response = await result.response;
     const text = response.text();
 
@@ -81,7 +112,7 @@ const generateBasicPlan = (subjects, examDate, hoursPerDay) => {
   let bufferDays = 2;
   if (daysUntilExam <= 2) bufferDays = 0;
   else if (daysUntilExam <= 5) bufferDays = 1;
-  
+
   const studyDays = Math.max(daysUntilExam - bufferDays, 1);
 
   let allTopics = [];
