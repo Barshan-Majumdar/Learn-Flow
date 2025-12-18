@@ -8,7 +8,7 @@ import { generateContentWithRetry } from './utils.js';
  * @returns {Promise<Object>} - Quiz questions
  */
 export const generateQuiz = async (topic, numQuestions = 5) => {
-  const model = getModel();
+  const model = getModel(process.env.GEMINI_API_KEY_QUIZ);
 
   const prompt = `Create a quiz for testing knowledge on: ${topic}
 

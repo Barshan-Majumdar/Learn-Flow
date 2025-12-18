@@ -1,15 +1,6 @@
 import { getModel } from './model.js';
 import { generateContentWithRetry } from './utils.js';
 
-/**
- * Generate study plan using AI
- * @param {Array} subjects - Array of subjects with topics
- * @param {Date} examDate - Target exam date
- * @param {number} hoursPerDay - Available study hours per day
- * @returns {Promise<Object>} - AI-optimized study plan
- */
-
-
 
 /**
  * Generate study plan using AI
@@ -23,7 +14,7 @@ export const generateStudyPlanWithAI = async (
   examDate,
   hoursPerDay = 4
 ) => {
-  const model = getModel();
+  const model = getModel(process.env.GEMINI_API_KEY_PLAN);
 
   const prompt = `You are a study planner AI. Create an optimized study schedule.
 

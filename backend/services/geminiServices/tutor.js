@@ -11,7 +11,7 @@ import { generateContentWithRetry } from './utils.js';
 
 
 export const explainTopicWithAnalogy = async (topic, analogy = "reallife") => {
-  const model = getModel();
+  const model = getModel(process.env.GEMINI_API_KEY_TUTOR);
 
   const analogyContexts = {
     marvel: "Use Marvel Cinematic Universe characters, powers, and storylines",
