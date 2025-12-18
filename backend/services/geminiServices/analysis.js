@@ -1,21 +1,10 @@
-
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from 'dotenv';
+import { getModel } from './model.js';
 dotenv.config();
-
-// Initialize separate Gemini instance for Analysis
-// User must provide GEMINI_ANALYSIS_API_KEY in .env
-const analysisGenAI = new GoogleGenerativeAI(process.env.GEMINI_ANALYSIS_API_KEY || process.env.GEMINI_API_KEY || "");
-
-const getAnalysisModel = () => {
-    // User requested 2.5-flash, but falling back to 1.5-flash for stability/availability
-    // as 2.5-flash previously caused 503 errors.
-    return analysisGenAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-};
 
 export const analyzeStudyProgress = async (stats, subjects) => {
     try {
-        const model = getAnalysisModel();
+        const model = getModel(process.env.GEMINI_API_KEY_ANALYSIS);
 
         const prompt = `
         You are an expert academic counselor and study analyst.
