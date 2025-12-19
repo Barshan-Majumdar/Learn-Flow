@@ -16,11 +16,19 @@ const app = express();
 
 // CORS Configuration - Permissive for debugging
 app.use(cors({
-  origin: true, // Allow all origins for now (set to specific URLs after debugging)
+  origin: function (origin, callback) {
+    if (
+      !origin ||
+      allowedOrigins.includes(origin) ||
+      origin.endsWith(".vercel.app") // Allow all Vercel deployments
+    ) {
+      callback(null, true);
+    } else {
+      // Optional: Allow all during development/testing or log
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 }));
 
 // Explicitly handle preflight OPTIONS requests
