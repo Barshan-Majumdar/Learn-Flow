@@ -1,18 +1,36 @@
 import mongoose from 'mongoose';
 
+
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
 const connectDB = async () => {
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false, // Disable buffering to fail fast if not connected
+    };
+
+    cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
+      return mongoose;
+    });
+  }
+
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI,{useNewUrlParser:true,useUnifiedTopology:true});
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-    let isConnected = true;
-    return isConnected;
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-    let isConnected = false;
-    return isConnected;
+    cached.conn = await cached.promise;
+    console.log(`MongoDB Connected: ${cached.conn.connection.host}`);
+    return cached.conn;
+  } catch (e) {
+    cached.promise = null;
+    console.error(`MongoDB connection error: ${e.message}`);
+    throw e;
   }
 };
 
-
-export default connectDB;
- 
+export default connectDB; 

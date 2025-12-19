@@ -42,7 +42,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Connect to MongoDB
-connectDB();
+// Connect to MongoDB
+// For Vercel, we need to await this, but top-level await is only supported in modules.
+// Since we are using "type": "module", we can try top-level await or just call it.
+// Better to let the first request trigger connection reuse or connect immediately if possible.
+connectDB().catch(err => console.error(err));
 
 // API Routes
 app.use('/api', syllabusRoutes);
