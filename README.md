@@ -145,7 +145,7 @@ Learn-Flow/
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/Barshan-Majumdar/cosmo.git
+https://github.com/Barshan-Majumdar/Learn-Flow.git
 cd learn-flow
 ```
 
